@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "280648755062",
+    "project_id": "lobbytalk-91e63",
+    "storage_bucket": "lobbytalk-91e63.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:280648755062:android:a424dd919caf0546757c57",
+        "android_client_info": {
+          "package_name": "com.example.lobbytalk"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCoN4QYrPOl2w7IDL1s_YPCnb0Jcm3gaW0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
