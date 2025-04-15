@@ -42,58 +42,85 @@ class RegisterPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.background,
-      body: Center(
-        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-          Icon(
-            Icons.message,
-            size: 60.0,
-            color: Theme.of(context).colorScheme.primary,
-          ),
-          const SizedBox(height: 30),
-          Text(
-            "Create an Account for you",
-            style: TextStyle(
-                color: Theme.of(context).colorScheme.primary, fontSize: 16.0),
-          ),
-          const SizedBox(height: 25),
-          MyTextfields(
-            hintText: "Email",
-            obscureText: false,
-            controller: _emailController,
-            keyboardType: TextInputType.emailAddress,
-          ),
-          const SizedBox(height: 10),
-          MyTextfields(
-            hintText: "Password",
-            obscureText: true,
-            controller: _pwController,
-          ),
-          const SizedBox(height: 10),
-          MyTextfields(
-            hintText: "Confirm Password",
-            obscureText: true,
-            controller: _confirmController,
-          ),
-          const SizedBox(height: 25),
-          MyButton(
-            text: "Register",
-            ontap: () => register(context),
-          ),
-          const SizedBox(height: 50),
-          Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-            Text(
-              "Have an account?   ",
-              style: TextStyle(color: Theme.of(context).colorScheme.primary),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          physics: BouncingScrollPhysics(),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: MediaQuery.of(context).size.height -
+                  MediaQuery.of(context).padding.top -
+                  MediaQuery.of(context).padding.bottom,
             ),
-            GestureDetector(
-              onTap: ontap,
-              child: Text("Login now",
-                  style: TextStyle(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox(height: 20),
+                  Icon(
+                    Icons.message,
+                    size: 60.0,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    "Create an Account",
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.primary,
+                      fontSize: 20.0,
                       fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.primary)),
+                    ),
+                  ),
+                  const SizedBox(height: 25),
+                  MyTextfields(
+                    hintText: "Email",
+                    obscureText: false,
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
+                  ),
+                  const SizedBox(height: 15),
+                  MyTextfields(
+                    hintText: "Password",
+                    obscureText: true,
+                    controller: _pwController,
+                  ),
+                  const SizedBox(height: 15),
+                  MyTextfields(
+                    hintText: "Confirm Password",
+                    obscureText: true,
+                    controller: _confirmController,
+                  ),
+                  const SizedBox(height: 25),
+                  MyButton(
+                    text: "Register",
+                    ontap: () => register(context),
+                  ),
+                  const SizedBox(height: 25),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        "Have an account?   ",
+                        style: TextStyle(color: Theme.of(context).colorScheme.primary),
+                      ),
+                      GestureDetector(
+                        onTap: ontap,
+                        child: Text(
+                          "Login now",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 20),
+                ],
+              ),
             ),
-          ])
-        ]),
+          ),
+        ),
       ),
     );
   }

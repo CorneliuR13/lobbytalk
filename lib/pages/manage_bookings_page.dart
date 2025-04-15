@@ -38,7 +38,6 @@ class _ManageBookingsPageState extends State<ManageBookingsPage> {
 
                 final bookings = snapshot.data ?? [];
 
-                // Apply filters
                 final filteredBookings = _selectedFilter == 'all'
                     ? bookings
                     : bookings.where((booking) => booking.status == _selectedFilter).toList();

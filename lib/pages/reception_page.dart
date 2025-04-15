@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../components/my_drawer.dart';
 import '../services/auth/auth_service.dart';
 import 'reception_checkin_page.dart';
-import 'reception_service_requests_page.dart'; // Import the new page
+import 'reception_service_requests_page.dart';
 import 'chat_page.dart';
 import 'hotel_services_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -423,7 +423,6 @@ class ReceptionPage extends StatelessWidget {
             ),
             ElevatedButton(
               onPressed: () {
-                // Save the updated profile
                 _firestore.collection("receptions").doc(currentUserId).update({
                   'hotelName': hotelNameController.text,
                   'location': locationController.text,

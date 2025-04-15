@@ -111,7 +111,6 @@ class ClientBookingsPage extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // Hotel name bar
           Container(
             padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
@@ -151,7 +150,6 @@ class ClientBookingsPage extends StatelessWidget {
             ),
           ),
 
-          // Booking details
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
@@ -159,7 +157,6 @@ class ClientBookingsPage extends StatelessWidget {
                 // Dates row
                 Row(
                   children: [
-                    // Check-in column
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -183,7 +180,6 @@ class ClientBookingsPage extends StatelessWidget {
                       ),
                     ),
 
-                    // Nights indicator
                     Container(
                       padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
@@ -199,7 +195,6 @@ class ClientBookingsPage extends StatelessWidget {
                       ),
                     ),
 
-                    // Check-out column
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
@@ -227,7 +222,6 @@ class ClientBookingsPage extends StatelessWidget {
 
                 Divider(height: 24),
 
-                // Room info
                 Row(
                   children: [
                     Icon(Icons.hotel, color: Colors.grey[600], size: 20),
@@ -243,7 +237,6 @@ class ClientBookingsPage extends StatelessWidget {
 
                 SizedBox(height: 8),
 
-                // Booking reference
                 Row(
                   children: [
                     Icon(Icons.confirmation_number, color: Colors.grey[600], size: 20),

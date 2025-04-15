@@ -45,7 +45,6 @@ class _ClientServiceRequestPageState extends State<ClientServiceRequestPage> {
     super.dispose();
   }
 
-  // Get icon for service
   IconData _getServiceIcon(String service) {
     switch (service.toLowerCase()) {
       case 'room service':
@@ -67,7 +66,6 @@ class _ClientServiceRequestPageState extends State<ClientServiceRequestPage> {
     }
   }
 
-  // Submit service request
   Future<void> _submitRequest() async {
     if (_selectedService.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -102,12 +100,11 @@ class _ClientServiceRequestPageState extends State<ClientServiceRequestPage> {
           _isSubmitting = false;
         });
 
-        // Show success and navigate back
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Service request submitted successfully (ID: $requestId)')),
         );
 
-        Navigator.pop(context, true); // Return true to indicate success
+        Navigator.pop(context, true);
       }
     } catch (e) {
       if (mounted) {
@@ -134,7 +131,6 @@ class _ClientServiceRequestPageState extends State<ClientServiceRequestPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header card
               Card(
                 elevation: 4,
                 child: Padding(
@@ -174,7 +170,6 @@ class _ClientServiceRequestPageState extends State<ClientServiceRequestPage> {
 
               SizedBox(height: 16),
 
-              // Service selector
               Text(
                 'Select Service',
                 style: TextStyle(
@@ -224,7 +219,6 @@ class _ClientServiceRequestPageState extends State<ClientServiceRequestPage> {
 
               SizedBox(height: 16),
 
-              // Name field
               TextField(
                 controller: _nameController,
                 decoration: InputDecoration(
@@ -237,7 +231,6 @@ class _ClientServiceRequestPageState extends State<ClientServiceRequestPage> {
 
               SizedBox(height: 16),
 
-              // Request details
               TextField(
                 controller: _detailsController,
                 decoration: InputDecoration(
@@ -251,7 +244,6 @@ class _ClientServiceRequestPageState extends State<ClientServiceRequestPage> {
 
               SizedBox(height: 24),
 
-              // Submit button
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -279,7 +271,6 @@ class _ClientServiceRequestPageState extends State<ClientServiceRequestPage> {
   }
 }
 
-// Active Requests Page
 class ClientActiveRequestsPage extends StatelessWidget {
   final ServiceRequestService _requestService = ServiceRequestService();
 
@@ -350,7 +341,6 @@ class ClientActiveRequestsPage extends StatelessWidget {
   Widget _buildRequestCard(BuildContext context, ServiceRequest request) {
     final dateFormat = DateFormat('MMM d, yyyy • h:mm a');
 
-    // Map status to colors and icons
     Color statusColor;
     IconData statusIcon;
     String statusText;

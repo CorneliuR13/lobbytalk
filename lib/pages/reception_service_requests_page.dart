@@ -40,7 +40,6 @@ class _ReceptionServiceRequestsPageState extends State<ReceptionServiceRequestsP
     });
 
     try {
-      // Load all requests
       final allRequests = await _requestService.getAllHotelRequests();
 
       print('Found ${allRequests.length} total requests');
@@ -62,14 +61,12 @@ class _ReceptionServiceRequestsPageState extends State<ReceptionServiceRequestsP
     }
   }
 
-  // Get requests filtered by status
   List<ServiceRequest> _getFilteredRequests(String status) {
     return _allRequests.where((request) => request.status == status).toList();
   }
 
   @override
   Widget build(BuildContext context) {
-    // Get filtered lists
     final pendingRequests = _getFilteredRequests('pending');
     final inProgressRequests = _getFilteredRequests('in_progress');
     final completedRequests = _getFilteredRequests('completed');
@@ -117,13 +114,10 @@ class _ReceptionServiceRequestsPageState extends State<ReceptionServiceRequestsP
           : TabBarView(
         controller: _tabController,
         children: [
-          // Pending requests tab
           _buildRequestsTab(pendingRequests, 'pending'),
 
-          // In progress requests tab
           _buildRequestsTab(inProgressRequests, 'in_progress'),
 
-          // Completed requests tab
           _buildRequestsTab(completedRequests, 'completed'),
         ],
       ),
@@ -305,7 +299,6 @@ class _ReceptionServiceRequestsPageState extends State<ReceptionServiceRequestsP
             ],
             SizedBox(height: 16),
 
-            // Action buttons
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
@@ -453,7 +446,6 @@ class _ReceptionServiceRequestsPageState extends State<ReceptionServiceRequestsP
     }
   }
 
-  // Dialog to assign request to staff
   void _showAssignDialog(BuildContext context, ServiceRequest request) {
     final TextEditingController staffNameController = TextEditingController();
 
@@ -506,7 +498,6 @@ class _ReceptionServiceRequestsPageState extends State<ReceptionServiceRequestsP
     );
   }
 
-  // Dialog to complete request
   void _showCompleteDialog(BuildContext context, ServiceRequest request) {
     showDialog(
       context: context,
@@ -540,7 +531,6 @@ class _ReceptionServiceRequestsPageState extends State<ReceptionServiceRequestsP
     );
   }
 
-  // Dialog to add notes
   void _showAddNotesDialog(BuildContext context, ServiceRequest request) {
     final TextEditingController notesController = TextEditingController();
     if (request.notes != null) {

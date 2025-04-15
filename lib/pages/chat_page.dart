@@ -74,7 +74,6 @@ class _ChatPageState extends State<ChatPage> {
     }
   }
 
-  // Send text message
   void sendMessage() async {
     if (_messageController.text.isNotEmpty) {
       await _chatService.sendMessage(
@@ -84,25 +83,35 @@ class _ChatPageState extends State<ChatPage> {
     scrollDown();
   }
 
-  // Send image message
   Future<void> sendImage(ImageSource source) async {
     setState(() {
       _isSendingImage = true;
     });
 
     try {
-      // Pick image
-      final File? imageFile = await _chatService.pickImage(source);
+      print("Opening image picker with source: $source");
+
+      final imageFile = await _chatService.pickImage(source);
 
       if (imageFile != null) {
-        // Send the image
+        print("Image picked: ${imageFile.path}, size: ${await imageFile.length()} bytes");
+
         await _chatService.sendImageMessage(widget.receiverID, imageFile);
+
+        print("Image sent successfully");
+
         scrollDown();
+      } else {
+        print("No image selected");
       }
     } catch (e) {
       print("Error sending image: $e");
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error sending image')),
+        SnackBar(
+          content: Text('Error sending image: $e'),
+          duration: Duration(seconds: 5),
+          backgroundColor: Colors.red,
+        ),
       );
     } finally {
       setState(() {
@@ -111,7 +120,6 @@ class _ChatPageState extends State<ChatPage> {
     }
   }
 
-  // show image source selection dialog
   void _showImageSourceDialog() {
     showDialog(
       context: context,
@@ -179,7 +187,6 @@ class _ChatPageState extends State<ChatPage> {
       ),
       body: Column(
         children: [
-          // Show loading indicator when sending image
           if (_isSendingImage)
             Container(
               padding: EdgeInsets.symmetric(vertical: 8),
@@ -198,7 +205,6 @@ class _ChatPageState extends State<ChatPage> {
               ),
             ),
 
-          //all messages
           Expanded(
             child: _buildMessageList(),
           ),
@@ -210,7 +216,6 @@ class _ChatPageState extends State<ChatPage> {
     );
   }
 
-  //build message list
   Widget _buildMessageList() {
     String senderID = _authService.getCurrentUser()!.uid;
     return StreamBuilder(
@@ -225,7 +230,6 @@ class _ChatPageState extends State<ChatPage> {
             return const Center(child: CircularProgressIndicator());
           }
 
-          // No messages yet
           if (snapshot.data!.docs.isEmpty) {
             return Center(
               child: Column(
@@ -299,14 +303,12 @@ class _ChatPageState extends State<ChatPage> {
         children: [
           Row(
             children: [
-              // Attachment button
               IconButton(
                 icon: Icon(Icons.photo),
                 onPressed: _showImageSourceDialog,
                 color: Colors.grey[700],
               ),
 
-              // Text field
               Expanded(
                 child: MyTextfields(
                   controller: _messageController,
@@ -316,7 +318,6 @@ class _ChatPageState extends State<ChatPage> {
                 ),
               ),
 
-              // Send button
               Container(
                 decoration: BoxDecoration(
                   color: widget.receiveEmail.endsWith('@reception.com')

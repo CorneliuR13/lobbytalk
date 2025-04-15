@@ -16,17 +16,14 @@ class AuthGate extends StatelessWidget {
       body: StreamBuilder<User?>(
           stream: FirebaseAuth.instance.authStateChanges(),
           builder: (context, snapshot) {
-            // Show loading indicator during state transition
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
             }
 
-            // Handle authenticated state
             if (snapshot.hasData && snapshot.data != null) {
               final AuthService authService = AuthService();
 
               if (authService.isReceptionist()) {
-                // Check if the reception has completed onboarding
                 return FutureBuilder<DocumentSnapshot>(
                   future: FirebaseFirestore.instance
                       .collection("receptions")
@@ -51,7 +48,6 @@ class AuthGate extends StatelessWidget {
                 return HomePage();
               }
             }
-            // Handle unauthenticated state
             else {
               return const LoginOrRegister();
             }

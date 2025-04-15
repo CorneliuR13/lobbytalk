@@ -5,6 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:lobbytalk/pages/chat_page.dart';
 import 'package:lobbytalk/services/auth/auth_service.dart';
 
+import '../services/notifications/notification_service.dart';
+
+
+
 class ReceptionCheckInPage extends StatefulWidget {
   const ReceptionCheckInPage({super.key});
 
@@ -109,6 +113,7 @@ class _ReceptionCheckInPageState extends State<ReceptionCheckInPage>
 
   Future<void> _validateCheckIn(String requestId, String clientId, String clientEmail, bool approve) async {
     try {
+      // Update request status in Firestore
       await _firestore.collection("check_in_requests").doc(requestId).update({
         'status': approve ? 'approved' : 'rejected',
         'processedAt': FieldValue.serverTimestamp(),

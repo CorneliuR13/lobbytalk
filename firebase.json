@@ -1,1 +1,40 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"lobbytalk-91e63","appId":"1:280648755062:android:a424dd919caf0546757c57","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"lobbytalk-91e63","configurations":{"android":"1:280648755062:android:a424dd919caf0546757c57","ios":"1:280648755062:ios:dba969c09d001ade757c57","macos":"1:280648755062:ios:dba969c09d001ade757c57","web":"1:280648755062:web:5988883012d61061757c57"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "lobbytalk-91e63",
+          "appId": "1:280648755062:android:a424dd919caf0546757c57",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "lobbytalk-91e63",
+          "configurations": {
+            "android": "1:280648755062:android:a424dd919caf0546757c57",
+            "ios": "1:280648755062:ios:dba969c09d001ade757c57",
+            "macos": "1:280648755062:ios:dba969c09d001ade757c57",
+            "web": "1:280648755062:web:5988883012d61061757c57"
+          }
+        }
+      }
+    }
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ],
+      "predeploy": [
+        "npm --prefix \"$RESOURCE_DIR\" run lint"
+      ]
+    }
+  ]
+}

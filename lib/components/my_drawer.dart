@@ -16,7 +16,6 @@ class MyDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Check if user is receptionist
     final bool isReceptionist = _authService.isReceptionist();
 
     return Drawer(
@@ -26,7 +25,6 @@ class MyDrawer extends StatelessWidget {
         children: [
           Column(
             children: [
-              // Header with app name
               DrawerHeader(
                 child: Icon(
                   Icons.message,
@@ -35,9 +33,7 @@ class MyDrawer extends StatelessWidget {
                 ),
               ),
 
-              // Different menu items based on user type
               if (!isReceptionist) ...[
-                // Client-specific menu items
                 ListTile(
                   title: const Text("My Bookings"),
                   leading: const Icon(Icons.history),
@@ -67,7 +63,6 @@ class MyDrawer extends StatelessWidget {
                 ),
               ],
 
-              // Settings (for all users)
               ListTile(
                 title: const Text("Settings"),
                 leading: const Icon(Icons.settings),
@@ -84,17 +79,14 @@ class MyDrawer extends StatelessWidget {
             ],
           ),
 
-          // Logout button at the bottom
           Padding(
             padding: const EdgeInsets.only(bottom: 25),
             child: ListTile(
               title: const Text("Logout"),
               leading: const Icon(Icons.logout),
               onTap: () {
-                // Close drawer first
                 Navigator.pop(context);
 
-                // Show confirmation dialog
                 showDialog(
                   context: context,
                   builder: (context) => AlertDialog(

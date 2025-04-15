@@ -32,7 +32,6 @@ class _CheckInPageState extends State<CheckInPage> {
   final BookingService _bookingService = BookingService();
 
   Future<void> _submitCheckIn() async {
-    // Validate input fields
     if (_bookingIdController.text.isEmpty ||
         _roomNumberController.text.isEmpty ||
         _nameController.text.isEmpty) {
@@ -105,7 +104,6 @@ class _CheckInPageState extends State<CheckInPage> {
             onPressed: () {
               Navigator.pop(context); // Close dialog
 
-              // Set up a listener for the check-in request status
               _listenForApproval(requestId);
             },
             child: Text('OK'),
@@ -144,7 +142,6 @@ class _CheckInPageState extends State<CheckInPage> {
               backgroundColor: Colors.red,
             ),
           );
-          // Stop listening
           return;
         }
       }

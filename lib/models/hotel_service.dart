@@ -15,7 +15,6 @@ class HotelService {
     this.isEnabled = true,
   });
 
-  // Convert to a map for Firestore
   Map<String, dynamic> toMap() {
     return {
       'id': id,

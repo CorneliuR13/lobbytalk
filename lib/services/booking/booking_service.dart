@@ -32,7 +32,6 @@ class BookingService {
     });
   }
 
-  // Create a new booking
   Future<String> createBooking({
     required String hotelId,
     required String hotelName,

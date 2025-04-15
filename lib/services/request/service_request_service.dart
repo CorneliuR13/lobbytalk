@@ -8,7 +8,6 @@ class ServiceRequestService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final AuthService _authService = AuthService();
 
-  // Create a new service request
   Future<String> createServiceRequest({
     required String hotelId,
     required String hotelName,
@@ -21,7 +20,6 @@ class ServiceRequestService {
       final String clientId = _auth.currentUser!.uid;
       final String clientEmail = _auth.currentUser!.email!;
 
-      // Create request data map
       final Map<String, dynamic> requestData = {
         'clientId': clientId,
         'clientName': clientName,
@@ -35,7 +33,6 @@ class ServiceRequestService {
         'requestTime': FieldValue.serverTimestamp(),
       };
 
-      // Add to Firestore
       final docRef = await _firestore
           .collection('service_requests')
           .add(requestData);
@@ -49,7 +46,6 @@ class ServiceRequestService {
     }
   }
 
-  // Get all service requests for a client
   Stream<List<ServiceRequest>> getClientRequests() {
     final String clientId = _auth.currentUser!.uid;
 
@@ -62,19 +58,16 @@ class ServiceRequestService {
     });
   }
 
-  // Get all service requests for a hotel
   Future<List<ServiceRequest>> getAllHotelRequests() async {
     final String hotelId = _auth.currentUser!.uid;
 
     try {
-      // Simple query without ordering (to avoid index issues)
       final snapshot = await _firestore
           .collection('service_requests')
           .where('hotelId', isEqualTo: hotelId)
           .get();
 
       final requests = snapshot.docs.map((doc) => ServiceRequest.fromDocument(doc)).toList();
-      // Sort in memory instead
       requests.sort((a, b) => b.requestTime.compareTo(a.requestTime));
 
       return requests;
@@ -84,7 +77,6 @@ class ServiceRequestService {
     }
   }
 
-  // Update service request status
   Future<void> updateRequestStatus(String requestId, String newStatus) async {
     try {
       await _firestore.collection('service_requests').doc(requestId).update({
@@ -97,7 +89,6 @@ class ServiceRequestService {
     }
   }
 
-  // Add notes to a service request
   Future<void> addRequestNotes(String requestId, String notes) async {
     try {
       await _firestore.collection('service_requests').doc(requestId).update({
@@ -109,7 +100,6 @@ class ServiceRequestService {
     }
   }
 
-  // Assign a service request to staff
   Future<void> assignRequest(String requestId, String staffName) async {
     try {
       await _firestore.collection('service_requests').doc(requestId).update({

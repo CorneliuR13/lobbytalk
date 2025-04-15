@@ -36,12 +36,6 @@ class _HotelOnboardingPageState extends State<HotelOnboardingPage> {
     'Airport Shuttle': false,
   };
 
-  // Check-in options
-  bool _requireBookingId = true;
-  bool _requireGuestIdentification = true;
-  bool _allowEarlyCheckIn = false;
-  bool _allowLateCheckOut = false;
-
   @override
   void dispose() {
     _pageController.dispose();
@@ -52,7 +46,7 @@ class _HotelOnboardingPageState extends State<HotelOnboardingPage> {
   }
 
   void _nextPage() {
-    if (_currentPage < 2) {
+    if (_currentPage < 1) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
@@ -107,12 +101,6 @@ class _HotelOnboardingPageState extends State<HotelOnboardingPage> {
         'location': _locationController.text,
         'description': _descriptionController.text,
         'availableServices': enabledServices,
-        'checkInOptions': {
-          'requireBookingId': _requireBookingId,
-          'requireGuestIdentification': _requireGuestIdentification,
-          'allowEarlyCheckIn': _allowEarlyCheckIn,
-          'allowLateCheckOut': _allowLateCheckOut,
-        },
         'onboardingCompleted': true,
         'createdAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
@@ -152,7 +140,7 @@ class _HotelOnboardingPageState extends State<HotelOnboardingPage> {
         children: [
           // Progress indicator
           LinearProgressIndicator(
-            value: (_currentPage + 1) / 3,
+            value: (_currentPage + 1) / 2, // Changed from 3 to 2
             backgroundColor: Colors.grey[200],
             color: Colors.redAccent,
           ),
@@ -173,9 +161,6 @@ class _HotelOnboardingPageState extends State<HotelOnboardingPage> {
 
                 // Page 2: Available Services
                 _buildServicesPage(),
-
-                // Page 3: Check-in Options
-                _buildCheckInOptionsPage(),
               ],
             ),
           ),
@@ -307,85 +292,6 @@ class _HotelOnboardingPageState extends State<HotelOnboardingPage> {
     );
   }
 
-  Widget _buildCheckInOptionsPage() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Check-in Preferences',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SizedBox(height: 8),
-              Text(
-                'Set your check-in and check-out policies.',
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 16,
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        SwitchListTile(
-          title: Text('Require Booking ID'),
-          subtitle: Text('Guests must provide a booking ID to check in'),
-          value: _requireBookingId,
-          activeColor: Colors.redAccent,
-          onChanged: (bool value) {
-            setState(() {
-              _requireBookingId = value;
-            });
-          },
-        ),
-
-        SwitchListTile(
-          title: Text('Require Guest Identification'),
-          subtitle: Text('Guests must provide identification to check in'),
-          value: _requireGuestIdentification,
-          activeColor: Colors.redAccent,
-          onChanged: (bool value) {
-            setState(() {
-              _requireGuestIdentification = value;
-            });
-          },
-        ),
-
-        SwitchListTile(
-          title: Text('Allow Early Check-in'),
-          subtitle: Text('Guests can check in before the standard time'),
-          value: _allowEarlyCheckIn,
-          activeColor: Colors.redAccent,
-          onChanged: (bool value) {
-            setState(() {
-              _allowEarlyCheckIn = value;
-            });
-          },
-        ),
-
-        SwitchListTile(
-          title: Text('Allow Late Check-out'),
-          subtitle: Text('Guests can check out after the standard time'),
-          value: _allowLateCheckOut,
-          activeColor: Colors.redAccent,
-          onChanged: (bool value) {
-            setState(() {
-              _allowLateCheckOut = value;
-            });
-          },
-        ),
-      ],
-    );
-  }
-
   Widget _buildBottomNavigation() {
     return Container(
       padding: EdgeInsets.all(16),
@@ -399,7 +305,7 @@ class _HotelOnboardingPageState extends State<HotelOnboardingPage> {
           )
               : SizedBox(width: 80),
           Text(
-            '${_currentPage + 1} of 3',
+            '${_currentPage + 1} of 2', // Changed from 3 to 2
             style: TextStyle(
               color: Colors.grey[600],
             ),
@@ -420,7 +326,7 @@ class _HotelOnboardingPageState extends State<HotelOnboardingPage> {
               ),
             )
                 : Text(
-              _currentPage == 2 ? 'Finish' : 'Next',
+              _currentPage == 1 ? 'Finish' : 'Next',
               style: TextStyle(color: Colors.white),
             ),
           ),

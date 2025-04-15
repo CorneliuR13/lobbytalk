@@ -10,7 +10,7 @@ class ServiceRequest {
   final String roomNumber;
   final String serviceType;
   final String requestDetails;
-  final String status; // 'pending', 'in_progress', 'completed', 'cancelled'
+  final String status;
   final DateTime requestTime;
   final DateTime? completionTime;
   final String? notes;
@@ -33,7 +33,6 @@ class ServiceRequest {
     this.assignedTo,
   });
 
-  // Convert to a map for Firestore
   Map<String, dynamic> toMap() {
     return {
       'clientId': clientId,
@@ -52,11 +51,9 @@ class ServiceRequest {
     };
   }
 
-  // Create a service request from a Firestore document
   factory ServiceRequest.fromDocument(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
 
-    // Handle Firestore timestamps
     DateTime requestTime = DateTime.now();
     if (data['requestTime'] != null) {
       if (data['requestTime'] is Timestamp) {
@@ -89,7 +86,6 @@ class ServiceRequest {
     );
   }
 
-  // Create a copy of the request with updated fields
   ServiceRequest copyWith({
     String? status,
     DateTime? completionTime,

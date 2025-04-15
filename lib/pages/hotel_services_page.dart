@@ -37,13 +37,10 @@ class _HotelServicesPageState extends State<HotelServicesPage> {
         final data = docSnapshot.data();
 
         if (data != null && data.containsKey('availableServices')) {
-          // Get already configured services
           final List<String> serviceNames = List<String>.from(data['availableServices'] ?? []);
 
-          // Get all potential services
           final allServices = HotelService.defaultServices();
 
-          // Mark services as enabled/disabled based on what's in Firestore
           _services = allServices.map((service) {
             return HotelService(
               id: service.id,
@@ -54,10 +51,8 @@ class _HotelServicesPageState extends State<HotelServicesPage> {
             );
           }).toList();
         } else {
-          // No services configured yet, use defaults with some enabled
           _services = HotelService.defaultServices();
 
-          // Enable some basic services by default
           for (int i = 0; i < _services.length; i++) {
             if (['Room Service', 'Housekeeping', 'Information'].contains(_services[i].name)) {
               _services[i] = HotelService(
@@ -79,7 +74,6 @@ class _HotelServicesPageState extends State<HotelServicesPage> {
           }
         }
       } else {
-        // Document doesn't exist yet, use defaults
         _services = HotelService.defaultServices();
       }
 
@@ -106,13 +100,11 @@ class _HotelServicesPageState extends State<HotelServicesPage> {
     try {
       final userId = _authService.getCurrentUser()?.uid;
 
-      // Get enabled service names
       final List<String> enabledServices = _services
           .where((service) => service.isEnabled)
           .map((service) => service.name)
           .toList();
 
-      // Save to Firestore
       await _firestore.collection('receptions').doc(userId).update({
         'availableServices': enabledServices,
       });
@@ -176,10 +168,8 @@ class _HotelServicesPageState extends State<HotelServicesPage> {
             onPressed: () {
               if (nameController.text.isNotEmpty) {
                 setState(() {
-                  // Create a unique ID
                   final id = 'custom_${DateTime.now().millisecondsSinceEpoch}';
 
-                  // Add to list
                   _services.add(HotelService(
                     id: id,
                     name: nameController.text,

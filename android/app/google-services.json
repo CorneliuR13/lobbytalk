@@ -12,7 +12,20 @@
           "package_name": "com.example.lobbytalk"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "280648755062-qag6ttdbv4me27b0s06764ecnfh1bj15.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.lobbytalk",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "280648755062-qh4a7huomrjse20utf7n85hmaa5buvda.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyCoN4QYrPOl2w7IDL1s_YPCnb0Jcm3gaW0"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "280648755062-qh4a7huomrjse20utf7n85hmaa5buvda.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "280648755062-gicoplrr2vv187mavjdnqigcbnl3n3o7.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.lobbytalk"
+              }
+            }
+          ]
         }
       }
     }

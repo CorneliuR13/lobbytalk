@@ -1,8 +1,6 @@
-// Adimport 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:lobbytalk/pages/chat_page.dart';
 import 'package:lobbytalk/pages/client_service_request_page.dart'; // Import the new pages
-import 'package:lobbytalk/pages/debug_page.dart'; // Import the debug page
 import 'package:lobbytalk/services/auth/auth_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../components/my_drawer.dart';
@@ -45,7 +43,6 @@ class _HomePageState extends State<HomePage> {
       for (var doc in snapshot.docs) {
         final data = doc.data();
 
-        // Get hotel services information
         DocumentSnapshot hotelDoc = await _firestore
             .collection("receptions")
             .doc(data['receptionId'])
@@ -87,13 +84,11 @@ class _HomePageState extends State<HomePage> {
         title: Text("Home", style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.lightBlueAccent,
         actions: [
-          // Add refresh button
           IconButton(
             icon: Icon(Icons.refresh),
             onPressed: _loadApprovedReceptions,
             tooltip: 'Refresh',
           ),
-          // Add my requests button
           if (_receptionContacts.isNotEmpty)
             IconButton(
               icon: Icon(Icons.history),
@@ -108,18 +103,7 @@ class _HomePageState extends State<HomePage> {
               tooltip: 'My Requests',
             ),
           // Add debug button
-          IconButton(
-            icon: Icon(Icons.bug_report),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => DebugPage(),
-                ),
-              );
-            },
-            tooltip: 'Debug',
-          ),
+
         ],
       ),
       drawer: MyDrawer(),
@@ -212,7 +196,6 @@ class _HomePageState extends State<HomePage> {
                       ],
                     ),
                     onTap: () {
-                      // Navigate to chat with reception
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -229,7 +212,6 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
 
-          // Hotel Services section
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Text(
@@ -241,7 +223,6 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
 
-          // Services available for the checked-in hotel
           Expanded(
             flex: 2,
             child: _receptionContacts.isEmpty
@@ -259,19 +240,15 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildDynamicServicesGrid(BuildContext context) {
-    // Get services from the first hotel (assuming one hotel at a time)
     final reception = _receptionContacts.first;
     final List<String> availableServices = List<String>.from(reception['availableServices'] ?? []);
 
-    // Default services if none are defined
     if (availableServices.isEmpty) {
       availableServices.addAll(['Room Service', 'Housekeeping', 'Information']);
     }
 
-    // Create service tiles
     List<Widget> serviceTiles = [];
 
-    // Map of service names to icons and colors
     final Map<String, IconData> serviceIcons = {
       'Room Service': Icons.room_service,
       'Housekeeping': Icons.cleaning_services,
@@ -304,7 +281,6 @@ class _HomePageState extends State<HomePage> {
       Colors.cyan,
     ];
 
-    // Create a tile for each available service
     for (int i = 0; i < availableServices.length; i++) {
       final service = availableServices[i];
       final IconData icon = serviceIcons[service] ?? Icons.miscellaneous_services;
@@ -376,7 +352,6 @@ class _HomePageState extends State<HomePage> {
 
     final reception = _receptionContacts.first;
 
-    // Navigate to the service request page
     Navigator.push(
       context,
       MaterialPageRoute(
