@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../components/my_button.dart';
+import '../components/google_button.dart';
 import '../components/my_textfields.dart';
 import '../services/auth/auth_service.dart';
 
@@ -96,6 +97,11 @@ class RegisterPage extends StatelessWidget {
                     ontap: () => register(context),
                   ),
                   const SizedBox(height: 25),
+                  GoogleButton(
+                    onTap: () => signInWithGoogle(context),
+                    isLoading: false, // You'll need to manage this state
+                  ),
+                  const SizedBox(height: 25),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -123,5 +129,26 @@ class RegisterPage extends StatelessWidget {
         ),
       ),
     );
+  }
+  void signInWithGoogle(BuildContext context) async {
+    final _auth = AuthService();
+
+    try {
+      await _auth.signInWithGoogle();
+    } catch (e) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('Error'),
+          content: Text(e.toString()),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('OK'),
+            ),
+          ],
+        ),
+      );
+    }
   }
 }

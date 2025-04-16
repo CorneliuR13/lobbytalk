@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:lobbytalk/components/my_button.dart';
 import 'package:lobbytalk/components/my_textfields.dart';
-
+import '../components/google_button.dart';
 import '../services/auth/auth_service.dart';
+import 'home_page.dart';
 
 class LoginPage extends StatelessWidget {
   //email password controller
@@ -91,6 +92,14 @@ class LoginPage extends StatelessWidget {
                     text: "Login",
                     ontap: () => login(context),
                   ),
+                  const SizedBox(height: 15),
+
+                  // Google button
+                  GoogleButton(
+                    onTap: () => signInWithGoogle(context),
+                    isLoading: false,
+                  ),
+
                   const SizedBox(height: 25),
 
                   //register now
@@ -122,4 +131,32 @@ class LoginPage extends StatelessWidget {
       ),
     );
   }
+
+  void signInWithGoogle(BuildContext context) async {
+    // get service
+    final authService = AuthService();
+
+    try {
+      final userCredential = await authService.signInWithGoogle();
+      if (userCredential == null) {
+        // User cancelled the sign-in flow
+        print("Google sign-in was cancelled by user");
+      }
+    } catch (e) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text("Error"),
+          content: Text(e.toString()),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("OK"),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
 }
