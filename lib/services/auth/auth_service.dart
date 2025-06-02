@@ -4,9 +4,17 @@ import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthService {
   //instance of auth
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  final FirebaseAuth _auth;
+  final FirebaseFirestore _firestore;
+  final GoogleSignIn _googleSignIn;
+
+  AuthService({
+    FirebaseAuth? auth,
+    FirebaseFirestore? firestore,
+    GoogleSignIn? googleSignIn,
+  })  : _auth = auth ?? FirebaseAuth.instance,
+        _firestore = firestore ?? FirebaseFirestore.instance,
+        _googleSignIn = googleSignIn ?? GoogleSignIn();
 
   User? getCurrentUser() {
     return _auth.currentUser;
@@ -94,7 +102,8 @@ class AuthService {
       }
 
       // Obtain auth details from request
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
 
       // Create a new credential
       final credential = GoogleAuthProvider.credential(

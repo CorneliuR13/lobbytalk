@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:lobbytalk/models/booking.dart';
 import 'package:lobbytalk/services/booking/booking_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ManageBookingsPage extends StatefulWidget {
   const ManageBookingsPage({super.key});
@@ -12,6 +13,7 @@ class ManageBookingsPage extends StatefulWidget {
 
 class _ManageBookingsPageState extends State<ManageBookingsPage> {
   final BookingService _bookingService = BookingService();
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   String _selectedFilter = 'all';
 
   @override
@@ -197,7 +199,7 @@ class _ManageBookingsPageState extends State<ManageBookingsPage> {
                   ),
                 if (booking.status == 'checked_in')
                   ElevatedButton(
-                    onPressed: () => _updateBookingStatus(booking.id, 'checked_out'),
+                    onPressed: () => _showCheckOutDialog(booking),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blueGrey,
                     ),
@@ -381,5 +383,129 @@ class _ManageBookingsPageState extends State<ManageBookingsPage> {
         ],
       ),
     );
+  }
+  Future<void> _showCheckOutDialog(Booking booking) async {
+    final TextEditingController additionalNotesController = TextEditingController();
+
+    final bool? result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Check Out Guest'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Are you sure you want to check out:',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 8),
+            Text('Guest: ${booking.guestName}'),
+            Text('Room: ${booking.roomNumber}'),
+            SizedBox(height: 16),
+            TextField(
+              controller: additionalNotesController,
+              decoration: InputDecoration(
+                labelText: 'Additional Notes (Optional)',
+                border: OutlineInputBorder(),
+                hintText: 'Enter any checkout notes...',
+              ),
+              maxLines: 3,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blueGrey,
+            ),
+            child: Text('Confirm Check Out'),
+          ),
+        ],
+      ),
+    );
+
+    if (result == true) {
+      try {
+        // First update the booking status to checked_out
+        await _bookingService.updateBookingStatus(booking.id, 'checked_out');
+
+        // Then save any checkout notes if provided
+        if (additionalNotesController.text.isNotEmpty) {
+          await _bookingService.addCheckoutNotes(
+              booking.id,
+              additionalNotesController.text
+          );
+        }
+
+        // Optional: Update any other systems or trigger notifications
+        await _handleCheckoutProcess(booking);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${booking.guestName} has been checked out from room ${booking.roomNumber}'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error during checkout: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+// Add this helper method to handle additional checkout processes
+  Future<void> _handleCheckoutProcess(Booking booking) async {
+    try {
+      // 1. Remove guest access to chat
+      final checkInRequests = await _firestore
+          .collection("check_in_requests")
+          .where('clientId', isEqualTo: booking.guestEmail)
+          .where('hotelId', isEqualTo: booking.hotelId)
+          .get();
+
+      for (var doc in checkInRequests.docs) {
+        await _firestore.collection("check_in_requests").doc(doc.id).update({
+          'status': 'inactive'
+        });
+      }
+
+      // 2. Mark any pending service requests as cancelled
+      final serviceRequests = await _firestore
+          .collection("service_requests")
+          .where('clientEmail', isEqualTo: booking.guestEmail)
+          .where('hotelId', isEqualTo: booking.hotelId)
+          .where('status', whereIn: ['pending', 'in_progress'])
+          .get();
+
+      for (var doc in serviceRequests.docs) {
+        await _firestore.collection("service_requests").doc(doc.id).update({
+          'status': 'cancelled',
+          'notes': FieldValue.arrayUnion(['Cancelled due to guest checkout']),
+        });
+      }
+
+      // 3. Add room to cleaning schedule (example functionality)
+      await _firestore.collection("cleaning_tasks").add({
+        'hotelId': booking.hotelId,
+        'roomNumber': booking.roomNumber,
+        'status': 'pending',
+        'priority': 'high',
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+    } catch (e) {
+      print('Error in checkout process: $e');
+      // Handle errors but don't block the main checkout process
+    }
   }
 }

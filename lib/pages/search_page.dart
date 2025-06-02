@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:lobbytalk/pages/check_in_page.dart';
+import 'package:lobbytalk/services/translations.dart';
+import 'package:lobbytalk/components/language_switcher.dart';
 
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
@@ -70,10 +72,14 @@ class _SearchPageState extends State<SearchPage> {
 
   @override
   Widget build(BuildContext context) {
+    final t = Translations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: Text("Find Your Hotel", style: TextStyle(color: Colors.white)),
+        title: Text(t.findHotels, style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.lightBlueAccent,
+        actions: [
+          const LanguageSwitcher(),
+        ],
       ),
       body: Column(
         children: [
@@ -82,7 +88,8 @@ class _SearchPageState extends State<SearchPage> {
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                hintText: "Search hotel by name or leave empty to see all",
+                hintText: t.searchHotelHint ??
+                    "Search hotel by name or leave empty to see all",
                 prefixIcon: Icon(Icons.search),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -99,46 +106,48 @@ class _SearchPageState extends State<SearchPage> {
               backgroundColor: Colors.lightBlueAccent,
               padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
             ),
-            child: Text("Search Hotels", style: TextStyle(color: Colors.white)),
+            child: Text(t.searchHotelsButton ?? "Search Hotels",
+                style: TextStyle(color: Colors.white)),
           ),
           SizedBox(height: 16),
           _isSearching
               ? Center(child: CircularProgressIndicator())
               : Expanded(
-            child: !_hasSearched
-                ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.hotel,
-                    size: 64,
-                    color: Colors.grey[400],
-                  ),
-                  SizedBox(height: 16),
-                  Text(
-                    "Search for hotels or press Search to see all",
-                    style: TextStyle(color: Colors.grey[600]),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            )
-                : _searchResults.isEmpty
-                ? Center(
-              child: Text(
-                "No hotels found",
-                style: TextStyle(color: Colors.grey[600]),
-              ),
-            )
-                : _buildHotelList(),
-          ),
+                  child: !_hasSearched
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.hotel,
+                                size: 64,
+                                color: Colors.grey[400],
+                              ),
+                              SizedBox(height: 16),
+                              Text(
+                                t.searchHotelsOrPress ??
+                                    "Search for hotels or press Search to see all",
+                                style: TextStyle(color: Colors.grey[600]),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
+                        )
+                      : _searchResults.isEmpty
+                          ? Center(
+                              child: Text(
+                                t.noHotelsFound ?? "No hotels found",
+                                style: TextStyle(color: Colors.grey[600]),
+                              ),
+                            )
+                          : _buildHotelList(t),
+                ),
         ],
       ),
     );
   }
 
-  Widget _buildHotelList() {
+  Widget _buildHotelList(Translations t) {
     return ListView.builder(
       itemCount: _searchResults.length,
       itemBuilder: (context, index) {
@@ -169,9 +178,11 @@ class _SearchPageState extends State<SearchPage> {
               ),
             ),
             children: [
-              if (hotel['description'] != null && hotel['description'].isNotEmpty)
+              if (hotel['description'] != null &&
+                  hotel['description'].isNotEmpty)
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   child: Text(
                     hotel['description'],
                     style: TextStyle(fontSize: 14),
@@ -196,7 +207,8 @@ class _SearchPageState extends State<SearchPage> {
                     backgroundColor: Colors.lightBlueAccent,
                     minimumSize: Size(double.infinity, 40),
                   ),
-                  child: Text('Check In', style: TextStyle(color: Colors.white)),
+                  child: Text(t.checkInButton ?? 'Check In',
+                      style: TextStyle(color: Colors.white)),
                 ),
               ),
             ],

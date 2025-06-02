@@ -39,11 +39,24 @@ class ChatService {
     ids.sort();
     String chatRoomID = ids.join('_');
 
+    // Send the message
     await _firestore
         .collection("chat_rooms")
         .doc(chatRoomID)
         .collection("messages")
         .add(newMessage.toMap());
+
+    // Update chat metadata with last message timestamp
+    await _firestore.collection("chat_metadata").doc(chatRoomID).set({
+      'lastMessageTimestamp': timestamp,
+      'lastMessage': message,
+      'participants': [currentUserId, receiverID],
+    }, SetOptions(merge: true));
+
+    // Increment unread counter for receiver
+    await _firestore.collection("chat_metadata").doc(chatRoomID).update({
+      'unread_$receiverID': FieldValue.increment(1),
+    });
   }
 
   Future<void> sendImageMessage(String receiverID, File imageFile) async {
@@ -75,7 +88,8 @@ class ChatService {
 
       // Generate a unique filename
       String fileName = '${Uuid().v4()}.jpg';
-      Reference storageRef = _storage.ref().child('chat_images/$chatRoomID/$fileName');
+      Reference storageRef =
+          _storage.ref().child('chat_images/$chatRoomID/$fileName');
 
       // Upload the file
       UploadTask uploadTask = storageRef.putFile(imageFile);
@@ -83,10 +97,7 @@ class ChatService {
       String imageUrl = await snapshot.ref.getDownloadURL();
 
       // Update the message with the actual image URL
-      await docRef.update({
-        'message': imageUrl,
-        'type': 'image'
-      });
+      await docRef.update({'message': imageUrl, 'type': 'image'});
 
       print("Image uploaded successfully: $imageUrl");
     } catch (e) {
@@ -127,5 +138,17 @@ class ChatService {
         .collection("messages")
         .orderBy("timestamp", descending: false)
         .snapshots();
+  }
+
+  Future<void> markChatAsRead(String otherUserId) async {
+    final String currentUserId = _auth.currentUser!.uid;
+
+    List<String> ids = [currentUserId, otherUserId];
+    ids.sort();
+    String chatRoomID = ids.join('_');
+
+    await _firestore.collection("chat_metadata").doc(chatRoomID).update({
+      'unread_$currentUserId': 0,
+    });
   }
 }

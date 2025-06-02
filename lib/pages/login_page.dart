@@ -4,6 +4,9 @@ import 'package:lobbytalk/components/my_textfields.dart';
 import '../components/google_button.dart';
 import '../services/auth/auth_service.dart';
 import 'home_page.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../services/notification_service.dart';
 
 class LoginPage extends StatelessWidget {
   //email password controller
@@ -15,6 +18,20 @@ class LoginPage extends StatelessWidget {
     required this.ontap,
   });
 
+  // Helper to save FCM token to Firestore
+  Future<void> saveFcmTokenToFirestore() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final token = await NotificationService.getFcmToken();
+      if (token != null) {
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).set(
+          {'fcmToken': token},
+          SetOptions(merge: true),
+        );
+      }
+    }
+  }
+
   //login method
   void login(BuildContext context) async {
     // get service
@@ -23,6 +40,7 @@ class LoginPage extends StatelessWidget {
     try {
       await authService.signInWithEmailPassword(
           _emailController.text, _pwController.text);
+      await saveFcmTokenToFirestore(); // Save FCM token after login
     } catch (e) {
       showDialog(
         context: context,
@@ -103,25 +121,22 @@ class LoginPage extends StatelessWidget {
                   const SizedBox(height: 25),
 
                   //register now
-                  Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          "Don't have an account?   ",
-                          style: TextStyle(color: Theme.of(context).colorScheme.primary),
-                        ),
-                        GestureDetector(
-                          onTap: ontap,
-                          child: Text(
-                            "Register NOW!",
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Theme.of(context).colorScheme.primary
-                            ),
-                          ),
-                        ),
-                      ]
-                  ),
+                  Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                    Text(
+                      "Don't have an account?   ",
+                      style: TextStyle(
+                          color: Theme.of(context).colorScheme.primary),
+                    ),
+                    GestureDetector(
+                      onTap: ontap,
+                      child: Text(
+                        "Register NOW!",
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.primary),
+                      ),
+                    ),
+                  ]),
                   SizedBox(height: 20),
                 ],
               ),
@@ -141,6 +156,8 @@ class LoginPage extends StatelessWidget {
       if (userCredential == null) {
         // User cancelled the sign-in flow
         print("Google sign-in was cancelled by user");
+      } else {
+        await saveFcmTokenToFirestore(); // Save FCM token after Google login
       }
     } catch (e) {
       showDialog(
@@ -158,5 +175,4 @@ class LoginPage extends StatelessWidget {
       );
     }
   }
-
 }

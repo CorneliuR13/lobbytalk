@@ -35,7 +35,7 @@ class AuthGate extends StatelessWidget {
                     }
 
                     final data = snapshot.data?.data() as Map<String, dynamic>?;
-                    final bool onboardingCompleted = data?['onboardingCompleted'] ?? false;
+                    final bool onboardingCompleted = data?['onboardingCompleted'] ?? true ;
 
                     if (onboardingCompleted) {
                       return ReceptionPage();

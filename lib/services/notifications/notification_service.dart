@@ -14,27 +14,37 @@ class NotificationService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin =
-  FlutterLocalNotificationsPlugin();
+      FlutterLocalNotificationsPlugin();
 
   // Channel ID for Android notifications
   static const String _channelId = 'hotel_chat_channel';
   static const String _channelName = 'Hotel Chat Notifications';
   static const String _channelDescription = 'Notifications for LobbyTalk app';
 
-  // FCM server key - REPLACE WITH YOUR SERVER KEY
-  static const String _fcmServerKey = 'BIHrtNEO3k0Kmzkl1_A4Lm3xaMfSmT1uqGBQfCzr5CNWnfxDVct8StYGfbzX2wOjM7UwCrCjB3PeDV0mv4yvZhs';
+  // FCM server key - Get this from Firebase Console > Project Settings > Cloud Messaging
+  static const String _fcmServerKey =
+      'YOUR_SERVER_KEY_HERE'; // Replace with your actual server key
 
   Future<void> initialize(BuildContext context) async {
+    print('Initializing notification service...');
+
     // Request permission
     NotificationSettings settings = await _firebaseMessaging.requestPermission(
       alert: true,
       badge: true,
       sound: true,
       provisional: false,
+      criticalAlert: true,
     );
+
+    print('Notification permission status: ${settings.authorizationStatus}');
 
     if (settings.authorizationStatus == AuthorizationStatus.authorized) {
       print('User granted notification permission');
+
+      // Get FCM token
+      String? token = await _firebaseMessaging.getToken();
+      print('FCM Token: $token');
 
       // Set foreground notification presentation options
       await FirebaseMessaging.instance
@@ -46,19 +56,20 @@ class NotificationService {
 
       // Initialize Android notification channel
       const AndroidInitializationSettings initializationSettingsAndroid =
-      AndroidInitializationSettings('@mipmap/ic_launcher');
+          AndroidInitializationSettings('@mipmap/ic_launcher');
 
       // Initialize iOS notification settings
       final DarwinInitializationSettings initializationSettingsIOS =
-      DarwinInitializationSettings(
+          DarwinInitializationSettings(
         requestAlertPermission: true,
         requestBadgePermission: true,
         requestSoundPermission: true,
+        requestCriticalPermission: true,
       );
 
       // Combined initialization settings
       final InitializationSettings initializationSettings =
-      InitializationSettings(
+          InitializationSettings(
         android: initializationSettingsAndroid,
         iOS: initializationSettingsIOS,
       );
@@ -67,6 +78,7 @@ class NotificationService {
       await _flutterLocalNotificationsPlugin.initialize(
         initializationSettings,
         onDidReceiveNotificationResponse: (NotificationResponse response) {
+          print('Notification tapped: ${response.payload}');
           _handleNotificationTap(response.payload, context);
         },
       );
@@ -76,13 +88,22 @@ class NotificationService {
 
       // Handle foreground messages
       FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+        print('Received foreground message: ${message.messageId}');
+        print('Message data: ${message.data}');
+        print('Message notification: ${message.notification?.title}');
         _showNotification(message);
       });
 
       // Handle when app is opened from notification
       FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+        print('App opened from notification: ${message.messageId}');
+        print('Message data: ${message.data}');
         _handleNotificationTap(json.encode(message.data), context);
       });
+
+      // Handle background messages
+      FirebaseMessaging.onBackgroundMessage(
+          _firebaseMessagingBackgroundHandler);
 
       // Save current device token to Firestore
       await saveDeviceToken();
@@ -94,17 +115,23 @@ class NotificationService {
   // Create Android notification channel
   Future<void> _createNotificationChannel() async {
     if (Platform.isAndroid) {
+      print('Creating Android notification channel...');
       const AndroidNotificationChannel channel = AndroidNotificationChannel(
         _channelId,
         _channelName,
         description: _channelDescription,
         importance: Importance.high,
+        enableVibration: true,
+        enableLights: true,
+        playSound: true,
+        showBadge: true,
       );
 
       await _flutterLocalNotificationsPlugin
           .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>()
+              AndroidFlutterLocalNotificationsPlugin>()
           ?.createNotificationChannel(channel);
+      print('Android notification channel created');
     }
   }
 
@@ -113,6 +140,8 @@ class NotificationService {
     String? token = await _firebaseMessaging.getToken();
     String? userId = _auth.currentUser?.uid;
 
+    print('Saving device token. User ID: $userId, Token: $token');
+
     if (token != null && userId != null) {
       await _firestore.collection('users_tokens').doc(userId).set({
         'token': token,
@@ -120,31 +149,45 @@ class NotificationService {
         'lastUpdated': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
 
-      print('Device token saved: $token');
+      print('Device token saved successfully');
+    } else {
+      print('Failed to save device token: token or userId is null');
     }
   }
 
   // Show local notification
   Future<void> _showNotification(RemoteMessage message) async {
+    print('Showing notification...');
     RemoteNotification? notification = message.notification;
     AndroidNotification? android = message.notification?.android;
 
     if (notification != null) {
+      print('Notification title: ${notification.title}');
+      print('Notification body: ${notification.body}');
+
       AndroidNotificationDetails androidPlatformChannelSpecifics =
-      AndroidNotificationDetails(
+          AndroidNotificationDetails(
         _channelId,
         _channelName,
         channelDescription: _channelDescription,
         importance: Importance.max,
         priority: Priority.high,
         showWhen: true,
+        enableVibration: true,
+        enableLights: true,
+        playSound: true,
+        visibility: NotificationVisibility.public,
+        category: AndroidNotificationCategory.message,
       );
 
       DarwinNotificationDetails iOSPlatformChannelSpecifics =
-      DarwinNotificationDetails(
+          DarwinNotificationDetails(
         presentAlert: true,
         presentBadge: true,
         presentSound: true,
+        sound: 'default',
+        badgeNumber: 1,
+        interruptionLevel: InterruptionLevel.timeSensitive,
       );
 
       NotificationDetails platformChannelSpecifics = NotificationDetails(
@@ -159,6 +202,9 @@ class NotificationService {
         platformChannelSpecifics,
         payload: json.encode(message.data),
       );
+      print('Local notification shown successfully');
+    } else {
+      print('Failed to show notification: notification is null');
     }
   }
 
@@ -202,50 +248,84 @@ class NotificationService {
     required String message,
     required String senderName,
   }) async {
+    print('Sending chat notification...');
+    print('Receiver ID: $receiverId');
+    print('Message: $message');
+
     try {
       // Get recipient's FCM token
       DocumentSnapshot tokenDoc =
-      await _firestore.collection('users_tokens').doc(receiverId).get();
+          await _firestore.collection('users_tokens').doc(receiverId).get();
 
       if (tokenDoc.exists) {
         final data = tokenDoc.data() as Map<String, dynamic>;
         String? token = data['token'];
+        print('Recipient token: $token');
 
         if (token != null) {
           // Prepare notification data
           final notificationData = {
-            'notification': {
-              'title': 'Message from $senderName',
-              'body': message.length > 50
-                  ? '${message.substring(0, 47)}...'
-                  : message,
-              'sound': 'default',
+            'message': {
+              'token': token,
+              'notification': {
+                'title': 'Message from $senderName',
+                'body': message.length > 50
+                    ? '${message.substring(0, 47)}...'
+                    : message,
+              },
+              'android': {
+                'notification': {
+                  'channel_id': _channelId,
+                  'priority': 'high',
+                  'sound': 'default',
+                  'default_sound': true,
+                  'default_vibrate_timings': true,
+                  'default_light_settings': true,
+                },
+              },
+              'apns': {
+                'payload': {
+                  'aps': {
+                    'sound': 'default',
+                    'badge': 1,
+                    'content-available': 1,
+                  },
+                },
+              },
+              'data': {
+                'type': 'chat',
+                'senderId': _auth.currentUser?.uid,
+                'senderEmail': _auth.currentUser?.email,
+                'click_action': 'FLUTTER_NOTIFICATION_CLICK',
+              },
             },
-            'data': {
-              'type': 'chat',
-              'senderId': _auth.currentUser?.uid,
-              'senderEmail': _auth.currentUser?.email,
-              'click_action': 'FLUTTER_NOTIFICATION_CLICK',
-            },
-            'to': token,
           };
 
-          // Send FCM notification
+          print('Sending FCM notification with data: $notificationData');
+
+          // Send FCM notification using HTTP v1 API
           final response = await http.post(
-            Uri.parse('https://fcm.googleapis.com/fcm/send'),
+            Uri.parse(
+                'https://fcm.googleapis.com/v1/projects/lobbytalk-91e63/messages:send'),
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': 'key=$_fcmServerKey',
+              'Authorization': 'Bearer $_fcmServerKey',
             },
             body: json.encode(notificationData),
           );
+
+          print('FCM Response status: ${response.statusCode}');
+          print('FCM Response body: ${response.body}');
 
           if (response.statusCode == 200) {
             print('Notification sent successfully');
             return true;
           } else {
-            print('Failed to send notification. Status: ${response.statusCode}, Body: ${response.body}');
-            return false;
+            print(
+                'Failed to send notification. Status: ${response.statusCode}, Body: ${response.body}');
+
+            // Try legacy FCM endpoint if v1 API fails
+            return await _sendLegacyFCMNotification(token, senderName, message);
           }
         }
       }
@@ -254,6 +334,50 @@ class NotificationService {
       return false;
     } catch (e) {
       print('Error sending notification: $e');
+      return false;
+    }
+  }
+
+  // Fallback to legacy FCM endpoint
+  Future<bool> _sendLegacyFCMNotification(
+      String token, String senderName, String message) async {
+    try {
+      final legacyNotificationData = {
+        'notification': {
+          'title': 'Message from $senderName',
+          'body':
+              message.length > 50 ? '${message.substring(0, 47)}...' : message,
+          'sound': 'default',
+          'badge': '1',
+          'priority': 'high',
+        },
+        'data': {
+          'type': 'chat',
+          'senderId': _auth.currentUser?.uid,
+          'senderEmail': _auth.currentUser?.email,
+          'click_action': 'FLUTTER_NOTIFICATION_CLICK',
+          'priority': 'high',
+        },
+        'to': token,
+        'priority': 'high',
+      };
+
+      print('Trying legacy FCM endpoint...');
+      final response = await http.post(
+        Uri.parse('https://fcm.googleapis.com/fcm/send'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'key=$_fcmServerKey',
+        },
+        body: json.encode(legacyNotificationData),
+      );
+
+      print('Legacy FCM Response status: ${response.statusCode}');
+      print('Legacy FCM Response body: ${response.body}');
+
+      return response.statusCode == 200;
+    } catch (e) {
+      print('Error sending legacy notification: $e');
       return false;
     }
   }
@@ -267,7 +391,7 @@ class NotificationService {
     try {
       // Get recipient's FCM token
       DocumentSnapshot tokenDoc =
-      await _firestore.collection('users_tokens').doc(clientId).get();
+          await _firestore.collection('users_tokens').doc(clientId).get();
 
       if (tokenDoc.exists) {
         final data = tokenDoc.data() as Map<String, dynamic>;
@@ -307,7 +431,8 @@ class NotificationService {
             print('Check-in notification sent successfully');
             return true;
           } else {
-            print('Failed to send check-in notification. Status: ${response.statusCode}, Body: ${response.body}');
+            print(
+                'Failed to send check-in notification. Status: ${response.statusCode}, Body: ${response.body}');
             return false;
           }
         }
@@ -319,5 +444,62 @@ class NotificationService {
       print('Error sending check-in notification: $e');
       return false;
     }
+  }
+}
+
+// Handle background messages
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  print('Handling background message: ${message.messageId}');
+  print('Background message data: ${message.data}');
+  print('Background message notification: ${message.notification?.title}');
+
+  // Show local notification for background messages
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
+
+  const AndroidInitializationSettings initializationSettingsAndroid =
+      AndroidInitializationSettings('@mipmap/ic_launcher');
+
+  final DarwinInitializationSettings initializationSettingsIOS =
+      DarwinInitializationSettings(
+    requestAlertPermission: true,
+    requestBadgePermission: true,
+    requestSoundPermission: true,
+  );
+
+  final InitializationSettings initializationSettings = InitializationSettings(
+    android: initializationSettingsAndroid,
+    iOS: initializationSettingsIOS,
+  );
+
+  await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+
+  RemoteNotification? notification = message.notification;
+  if (notification != null) {
+    print('Showing background notification...');
+    await flutterLocalNotificationsPlugin.show(
+      notification.hashCode,
+      notification.title,
+      notification.body,
+      NotificationDetails(
+        android: AndroidNotificationDetails(
+          'hotel_chat_channel',
+          'Hotel Chat Notifications',
+          channelDescription: 'Notifications for LobbyTalk app',
+          importance: Importance.max,
+          priority: Priority.high,
+          showWhen: true,
+        ),
+        iOS: DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
+        ),
+      ),
+    );
+    print('Background notification shown successfully');
+  } else {
+    print('Failed to show background notification: notification is null');
   }
 }

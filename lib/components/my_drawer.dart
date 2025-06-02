@@ -3,6 +3,9 @@ import 'package:lobbytalk/pages/client_booking_page.dart';
 import 'package:lobbytalk/pages/search_page.dart';
 import 'package:lobbytalk/pages/settigns_page.dart';
 import 'package:lobbytalk/services/auth/auth_service.dart';
+import 'package:lobbytalk/services/translations.dart';
+
+import '../pages/client_service_request_page.dart';
 
 class MyDrawer extends StatelessWidget {
   MyDrawer({super.key});
@@ -17,6 +20,7 @@ class MyDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool isReceptionist = _authService.isReceptionist();
+    final t = Translations.of(context);
 
     return Drawer(
       backgroundColor: Theme.of(context).colorScheme.background,
@@ -32,24 +36,22 @@ class MyDrawer extends StatelessWidget {
                   color: Theme.of(context).colorScheme.primary,
                 ),
               ),
-
               if (!isReceptionist) ...[
                 ListTile(
-                  title: const Text("My Bookings"),
-                  leading: const Icon(Icons.history),
+                  title: Text(t.myRequest),
+                  leading: const Icon(Icons.room_service),
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => ClientBookingsPage(),
+                        builder: (context) => ClientActiveRequestsPage(),
                       ),
                     );
                   },
                 ),
-
                 ListTile(
-                  title: const Text("Find Hotels"),
+                  title: Text(t.findHotels),
                   leading: const Icon(Icons.search),
                   onTap: () {
                     Navigator.pop(context);
@@ -62,9 +64,8 @@ class MyDrawer extends StatelessWidget {
                   },
                 ),
               ],
-
               ListTile(
-                title: const Text("Settings"),
+                title: Text(t.settings),
                 leading: const Icon(Icons.settings),
                 onTap: () {
                   Navigator.pop(context);
@@ -78,11 +79,10 @@ class MyDrawer extends StatelessWidget {
               ),
             ],
           ),
-
           Padding(
             padding: const EdgeInsets.only(bottom: 25),
             child: ListTile(
-              title: const Text("Logout"),
+              title: Text(t.logout),
               leading: const Icon(Icons.logout),
               onTap: () {
                 Navigator.pop(context);
@@ -90,12 +90,12 @@ class MyDrawer extends StatelessWidget {
                 showDialog(
                   context: context,
                   builder: (context) => AlertDialog(
-                    title: Text("Logout"),
-                    content: Text("Are you sure you want to logout?"),
+                    title: Text(t.logout),
+                    content: Text(t.logoutConfirm),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(context),
-                        child: Text("Cancel"),
+                        child: Text(t.cancel),
                       ),
                       ElevatedButton(
                         onPressed: () {
@@ -105,7 +105,7 @@ class MyDrawer extends StatelessWidget {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.red,
                         ),
-                        child: Text("Logout"),
+                        child: Text(t.logout),
                       ),
                     ],
                   ),

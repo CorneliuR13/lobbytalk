@@ -3,6 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:lobbytalk/pages/chat_page.dart';
 import 'package:lobbytalk/services/booking/booking_service.dart';
+import 'package:lobbytalk/services/translations.dart';
+import 'package:lobbytalk/components/language_switcher.dart';
 
 class CheckInPage extends StatefulWidget {
   final String hotelName;
@@ -47,7 +49,8 @@ class _CheckInPageState extends State<CheckInPage> {
       final String currentUserId = _auth.currentUser!.uid;
       final String currentUserEmail = _auth.currentUser!.email!;
 
-      final checkInRequest = await _firestore.collection("check_in_requests").add({
+      final checkInRequest =
+          await _firestore.collection("check_in_requests").add({
         'clientId': currentUserId,
         'clientEmail': currentUserEmail,
         'clientName': _nameController.text,
@@ -75,15 +78,16 @@ class _CheckInPageState extends State<CheckInPage> {
   }
 
   void _showErrorDialog(String message) {
+    final t = Translations.of(context);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Error'),
+        title: Text(t.errorTitle ?? 'Error'),
         content: Text(message),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('OK'),
+            child: Text(t.okButton ?? 'OK'),
           ),
         ],
       ),
@@ -91,22 +95,22 @@ class _CheckInPageState extends State<CheckInPage> {
   }
 
   void _showSuccessDialog(String requestId) {
+    final t = Translations.of(context);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Check-In Request Sent'),
+        title: Text(t.checkInRequestSent ?? 'Check-In Request Sent'),
         content: Text(
-          'Your check-in request has been sent to the hotel reception. '
-              'Please wait for approval. You will be notified when your request is processed.',
+          t.checkInRequestSentDesc ??
+              'Your check-in request has been sent to the hotel reception. Please wait for approval. You will be notified when your request is processed.',
         ),
         actions: [
           TextButton(
             onPressed: () {
               Navigator.pop(context); // Close dialog
-
               _listenForApproval(requestId);
             },
-            child: Text('OK'),
+            child: Text(t.okButton ?? 'OK'),
           ),
         ],
       ),
@@ -123,7 +127,8 @@ class _CheckInPageState extends State<CheckInPage> {
         final status = snapshot.data()?['status'];
         if (status == 'approved') {
           if (_bookingIdController.text.isNotEmpty) {
-            _bookingService.updateBookingStatus(_bookingIdController.text, 'checked_in');
+            _bookingService.updateBookingStatus(
+                _bookingIdController.text, 'checked_in');
           }
 
           Navigator.pushReplacement(
@@ -138,7 +143,8 @@ class _CheckInPageState extends State<CheckInPage> {
         } else if (status == 'rejected') {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Your check-in request was rejected. Please verify your details.'),
+              content: Text(
+                  'Your check-in request was rejected. Please verify your details.'),
               backgroundColor: Colors.red,
             ),
           );
@@ -150,10 +156,15 @@ class _CheckInPageState extends State<CheckInPage> {
 
   @override
   Widget build(BuildContext context) {
+    final t = Translations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: Text("Check In", style: TextStyle(color: Colors.white)),
+        title: Text(t.checkInTitle ?? "Check In",
+            style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.lightBlueAccent,
+        actions: [
+          const LanguageSwitcher(),
+        ],
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -178,7 +189,8 @@ class _CheckInPageState extends State<CheckInPage> {
                       ),
                       SizedBox(height: 8),
                       Text(
-                        "Please provide your booking details to check in",
+                        t.provideBookingDetails ??
+                            "Please provide your booking details to check in",
                         style: TextStyle(
                           fontSize: 16,
                           color: Colors.grey[600],
@@ -193,7 +205,7 @@ class _CheckInPageState extends State<CheckInPage> {
 
               // Check-in form
               Text(
-                "Enter Your Booking Information",
+                t.enterBookingInfo ?? "Enter Your Booking Information",
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -205,7 +217,7 @@ class _CheckInPageState extends State<CheckInPage> {
               TextField(
                 controller: _bookingIdController,
                 decoration: InputDecoration(
-                  labelText: "Booking ID",
+                  labelText: t.bookingId,
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.confirmation_number),
                 ),
@@ -216,7 +228,7 @@ class _CheckInPageState extends State<CheckInPage> {
               TextField(
                 controller: _roomNumberController,
                 decoration: InputDecoration(
-                  labelText: "Room Number",
+                  labelText: t.roomNumber,
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.hotel),
                 ),
@@ -228,7 +240,7 @@ class _CheckInPageState extends State<CheckInPage> {
               TextField(
                 controller: _nameController,
                 decoration: InputDecoration(
-                  labelText: "Full Name (as on booking)",
+                  labelText: t.fullNameAsOnBooking,
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.person),
                 ),
@@ -247,35 +259,35 @@ class _CheckInPageState extends State<CheckInPage> {
                 ),
                 child: _isSubmitting
                     ? Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2,
-                      ),
-                    ),
-                    SizedBox(width: 12),
-                    Text(
-                      _isVerifying
-                          ? "Verifying booking..."
-                          : "Submitting request...",
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                )
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          ),
+                          SizedBox(width: 12),
+                          Text(
+                            _isVerifying
+                                ? t.verifyingBooking
+                                : t.submittingRequest,
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      )
                     : Text(
-                  "Submit Check-In Request",
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.white,
-                  ),
-                ),
+                        t.submitCheckInRequest,
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.white,
+                        ),
+                      ),
               ),
             ],
           ),

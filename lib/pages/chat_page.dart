@@ -7,6 +7,8 @@ import 'package:lobbytalk/components/chat_bubble.dart';
 import 'package:lobbytalk/components/my_textfields.dart';
 import 'package:lobbytalk/services/auth/auth_service.dart';
 import 'package:lobbytalk/services/chat/chat_services.dart';
+import 'package:lobbytalk/services/translations.dart';
+import 'package:lobbytalk/components/language_switcher.dart';
 
 class ChatPage extends StatefulWidget {
   final String receiveEmail;
@@ -35,18 +37,29 @@ class _ChatPageState extends State<ChatPage> {
   void initState() {
     super.initState();
 
+    ChatService().markChatAsRead(widget.receiverID);
+
     myfocusNode.addListener(() {
       if (myfocusNode.hasFocus) {
         Future.delayed(
           const Duration(milliseconds: 500),
-              () => scrollDown(),
+          () => scrollDown(),
+        );
+      }
+    });
+
+    myfocusNode.addListener(() {
+      if (myfocusNode.hasFocus) {
+        Future.delayed(
+          const Duration(milliseconds: 500),
+          () => scrollDown(),
         );
       }
     });
 
     Future.delayed(
       const Duration(milliseconds: 500),
-          () => scrollDown(),
+      () => scrollDown(),
     );
 
     if (widget.initialMessage != null && widget.initialMessage!.isNotEmpty) {
@@ -94,7 +107,8 @@ class _ChatPageState extends State<ChatPage> {
       final imageFile = await _chatService.pickImage(source);
 
       if (imageFile != null) {
-        print("Image picked: ${imageFile.path}, size: ${await imageFile.length()} bytes");
+        print(
+            "Image picked: ${imageFile.path}, size: ${await imageFile.length()} bytes");
 
         await _chatService.sendImageMessage(widget.receiverID, imageFile);
 
@@ -106,9 +120,10 @@ class _ChatPageState extends State<ChatPage> {
       }
     } catch (e) {
       print("Error sending image: $e");
+      final t = Translations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error sending image: $e'),
+          content: Text(t.errorSendingImage ?? 'Error sending image: $e'),
           duration: Duration(seconds: 5),
           backgroundColor: Colors.red,
         ),
@@ -121,16 +136,17 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   void _showImageSourceDialog() {
+    final t = Translations.of(context);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Select Image Source'),
+        title: Text(t.selectImageSource ?? 'Select Image Source'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
               leading: Icon(Icons.photo_library),
-              title: Text('Gallery'),
+              title: Text(t.galleryLabel ?? 'Gallery'),
               onTap: () {
                 Navigator.pop(context);
                 sendImage(ImageSource.gallery);
@@ -138,7 +154,7 @@ class _ChatPageState extends State<ChatPage> {
             ),
             ListTile(
               leading: Icon(Icons.camera_alt),
-              title: Text('Camera'),
+              title: Text(t.cameraLabel ?? 'Camera'),
               onTap: () {
                 Navigator.pop(context);
                 sendImage(ImageSource.camera);
@@ -149,7 +165,7 @@ class _ChatPageState extends State<ChatPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancel'),
+            child: Text(t.cancel ?? 'Cancel'),
           ),
         ],
       ),
@@ -158,6 +174,7 @@ class _ChatPageState extends State<ChatPage> {
 
   @override
   Widget build(BuildContext context) {
+    final t = Translations.of(context);
     return Scaffold(
       appBar: AppBar(
         title: Column(
@@ -172,8 +189,8 @@ class _ChatPageState extends State<ChatPage> {
             ),
             Text(
               widget.receiveEmail.endsWith('@reception.com')
-                  ? 'Hotel Reception'
-                  : 'Guest',
+                  ? t.hotelReceptionLabel ?? 'Hotel Reception'
+                  : t.guestLabel ?? 'Guest',
               style: TextStyle(
                 color: Colors.white70,
                 fontSize: 12,
@@ -184,6 +201,9 @@ class _ChatPageState extends State<ChatPage> {
         backgroundColor: widget.receiveEmail.endsWith('@reception.com')
             ? Colors.redAccent
             : Colors.lightBlueAccent,
+        actions: [
+          const LanguageSwitcher(),
+        ],
       ),
       body: Column(
         children: [
@@ -263,8 +283,9 @@ class _ChatPageState extends State<ChatPage> {
           //listView
           return ListView(
             controller: _scrollController,
-            children:
-            snapshot.data!.docs.map((doc) => _buildMessageItem(doc)).toList(),
+            children: snapshot.data!.docs
+                .map((doc) => _buildMessageItem(doc))
+                .toList(),
           );
         });
   }
@@ -276,7 +297,8 @@ class _ChatPageState extends State<ChatPage> {
     bool isCurrentUser = data['senderID'] == _authService.getCurrentUser()!.uid;
 
     //align message to the right
-    var alignment = isCurrentUser ? Alignment.centerRight : Alignment.centerLeft;
+    var alignment =
+        isCurrentUser ? Alignment.centerRight : Alignment.centerLeft;
 
     // get message type,
     String messageType = data['type'] ?? 'text';
@@ -285,7 +307,7 @@ class _ChatPageState extends State<ChatPage> {
         alignment: alignment,
         child: Column(
           crossAxisAlignment:
-          isCurrentUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+              isCurrentUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
           children: [
             ChatBubble(
               message: data["message"],
@@ -308,7 +330,6 @@ class _ChatPageState extends State<ChatPage> {
                 onPressed: _showImageSourceDialog,
                 color: Colors.grey[700],
               ),
-
               Expanded(
                 child: MyTextfields(
                   controller: _messageController,
@@ -317,7 +338,6 @@ class _ChatPageState extends State<ChatPage> {
                   focusNode: myfocusNode,
                 ),
               ),
-
               Container(
                 decoration: BoxDecoration(
                   color: widget.receiveEmail.endsWith('@reception.com')

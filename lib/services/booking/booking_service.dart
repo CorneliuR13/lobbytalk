@@ -100,4 +100,11 @@ class BookingService {
       return false;
     }
   }
+
+  Future<void> addCheckoutNotes(String bookingId, String notes) async {
+    await _firestore.collection('bookings').doc(bookingId).update({
+      'checkoutNotes': notes,
+      'checkoutTime': FieldValue.serverTimestamp(),
+    });
+  }
 }

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:lobbytalk/models/service_request.dart';
 import 'package:intl/intl.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:lobbytalk/pages/home_page.dart';
 
 import '../services/request/service_request_service.dart';
 
@@ -13,6 +16,8 @@ class ReceptionServiceRequestsPage extends StatefulWidget {
 
 class _ReceptionServiceRequestsPageState extends State<ReceptionServiceRequestsPage> with SingleTickerProviderStateMixin {
   final ServiceRequestService _requestService = ServiceRequestService();
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
   late TabController _tabController;
 
   bool _isLoading = true;
@@ -65,6 +70,79 @@ class _ReceptionServiceRequestsPageState extends State<ReceptionServiceRequestsP
     return _allRequests.where((request) => request.status == status).toList();
   }
 
+  Future<void> _checkOut() async {
+    try {
+      // Show confirmation dialog
+      bool confirm = await showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('Check Out'),
+          content: Text('Are you sure you want to check out? This will clear your connection with the hotel.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+              ),
+              child: Text('Check Out'),
+            ),
+          ],
+        ),
+      ) ?? false;
+
+      if (!confirm) return;
+
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+
+      final userId = _auth.currentUser?.uid;
+
+      // Update check-in status in Firestore
+      QuerySnapshot checkInRequests = await _firestore
+          .collection("check_in_requests")
+          .where('clientId', isEqualTo: userId)
+          .where('status', isEqualTo: 'approved')
+          .get();
+
+      // Update all approved check-ins to checked-out
+      for (var doc in checkInRequests.docs) {
+        await _firestore.collection("check_in_requests").doc(doc.id).update({
+          'status': 'checked_out',
+          'checkOutTime': FieldValue.serverTimestamp(),
+        });
+      }
+
+      // Close loading dialog
+      Navigator.pop(context);
+
+      // Navigate to home page
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => HomePage()),
+            (route) => false, // This clears the navigation stack
+      );
+
+    } catch (e) {
+      // Close loading dialog if open
+      Navigator.of(context, rootNavigator: true).pop();
+
+      print('Error checking out: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error checking out: $e')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final pendingRequests = _getFilteredRequests('pending');
@@ -91,6 +169,8 @@ class _ReceptionServiceRequestsPageState extends State<ReceptionServiceRequestsP
             onPressed: _loadRequests,
             tooltip: 'Refresh',
           ),
+          // Add Check Out button
+
         ],
       ),
       body: _isLoading
@@ -281,31 +361,15 @@ class _ReceptionServiceRequestsPageState extends State<ReceptionServiceRequestsP
                 ],
               ),
             ],
-            if (request.assignedTo != null && request.assignedTo!.isNotEmpty) ...[
-              SizedBox(height: 4),
-              Row(
-                children: [
-                  Icon(Icons.assignment_ind, size: 16, color: Colors.grey[600]),
-                  SizedBox(width: 4),
-                  Text(
-                    'Assigned to: ${request.assignedTo}',
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-            SizedBox(height: 16),
 
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 if (request.status == 'pending') ...[
+                  // Remove the Assign button and replace with direct "Start" functionality
                   TextButton(
-                    onPressed: () => _showAssignDialog(context, request),
-                    child: Text('Assign & Start'),
+                    onPressed: () => _startRequest(context, request),
+                    child: Text('Start Request'),
                     style: TextButton.styleFrom(
                       foregroundColor: Colors.blue,
                     ),
@@ -313,6 +377,7 @@ class _ReceptionServiceRequestsPageState extends State<ReceptionServiceRequestsP
                   SizedBox(width: 8),
                 ],
 
+                // Keep the rest of the buttons
                 if (request.status == 'in_progress') ...[
                   TextButton(
                     onPressed: () => _showCompleteDialog(context, request),
@@ -365,6 +430,25 @@ class _ReceptionServiceRequestsPageState extends State<ReceptionServiceRequestsP
         ),
       ),
     );
+  }
+
+  void _startRequest(BuildContext context, ServiceRequest request) {
+    try {
+      _requestService.updateRequestStatus(
+        request.id,
+        'in_progress',
+      );
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Request marked as in progress')),
+      );
+
+      _loadRequests(); // Reload the list
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error updating request: $e')),
+      );
+    }
   }
 
   Widget _getServiceIcon(String service) {
@@ -443,6 +527,25 @@ class _ReceptionServiceRequestsPageState extends State<ReceptionServiceRequestsP
         return Icons.cancel;
       default:
         return Icons.info;
+    }
+  }
+
+  Future<void> updateRequestToInProgress(String requestId) async {
+    try {
+      // Use the _requestService instead of directly accessing Firestore
+      await _requestService.updateRequestStatus(requestId, 'in_progress');
+
+      // Reload the requests list
+      _loadRequests();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Request marked as in progress')),
+      );
+    } catch (e) {
+      print('Error updating service request: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error updating request: $e')),
+      );
     }
   }
 
